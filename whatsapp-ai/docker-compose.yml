@@ -1,0 +1,12 @@
+services:
+  app:
+    build: .
+    container_name: grox-whatsapp-ai
+    restart: always
+    ports:
+      - "${PORT:-3000}:3000"
+    volumes:
+      - ./auth:/app/auth
+      - ./.env:/app/.env
+    environment:
+      - NODE_ENV=production
