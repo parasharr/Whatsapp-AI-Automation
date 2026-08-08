@@ -107,15 +107,13 @@ app.listen(PORT, async () => {
   console.log("✓ Customer Profile Service Ready");
   console.log("✓ Memory Service Ready");
 
-  // Verify Ollama connection
-  const ollamaUrl = process.env.OLLAMA_URL || "http://localhost:11434";
-  try {
-    const checkOllama = await axios.get(`${ollamaUrl}/api/tags`);
-    if (checkOllama.status === 200) {
-      console.log(`✓ Ollama Connected to ${ollamaUrl}`);
-    }
-  } catch (err) {
-    console.log(`⚠️ Ollama Offline (Failed to connect to ${ollamaUrl})`);
+  // Verify Gemini AI connection
+  const geminiApiKey = process.env.GEMINI_API_KEY;
+  const geminiModel = process.env.GEMINI_MODEL || "gemini-2.0-flash";
+  if (geminiApiKey) {
+    console.log(`✓ Gemini AI Engine Configured (${geminiModel})`);
+  } else {
+    console.log(`⚠️ Gemini AI API Key missing in environment variables.`);
   }
 
   // Start WhatsApp Gateway

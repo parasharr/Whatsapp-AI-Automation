@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   X, Mail, Phone, Globe, MapPin, Building, Briefcase, Calendar, 
   Target, Loader2, ExternalLink, RefreshCw, Archive, CheckSquare, 

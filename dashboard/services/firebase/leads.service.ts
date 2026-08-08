@@ -75,7 +75,7 @@ export async function updateLeadThreshold(threshold: number): Promise<void> {
         console.warn("[Dashboard Service] Backend settings sync failed.");
       }
     } catch (err) {
-      console.warn("[Dashboard Service] Backend is offline; could not sync settings threshold:", err.message);
+      console.warn("[Dashboard Service] Backend is offline; could not sync settings threshold:", (err as Error).message);
     }
   } catch (error) {
     console.error("Error updating lead threshold settings:", error);

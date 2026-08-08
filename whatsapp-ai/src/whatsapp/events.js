@@ -1,4 +1,4 @@
-import { askAI } from "../ai/ollama.js";
+import { askAI } from "../ai/gemini.js";
 import {
   processUserMessage,
   processAssistantMessage,
@@ -109,7 +109,7 @@ export function registerEvents(sock) {
       await sock.sendPresenceUpdate("composing", remoteJid);
 
       const tStartLLM = performance.now();
-      // 6. Ollama (LLM) Response
+      // 6. Gemini Flash (LLM) Response
       const reply = await askAI(promptMessages);
       const tEndLLM = performance.now();
 
@@ -132,7 +132,7 @@ export function registerEvents(sock) {
       console.log(`Knowledge Retrieval       : ${Math.round(tEndKnowledge - tStartKnowledge)} ms`);
       console.log(`Conversation Retrieval    : ${Math.round(tEndConversation - tStartConversation)} ms`);
       console.log(`Prompt Builder            : ${Math.round(tEndPrompt - tStartPrompt)} ms`);
-      console.log(`Ollama                    : ${Math.round(tEndLLM - tStartLLM)} ms`);
+      console.log(`Gemini Flash              : ${Math.round(tEndLLM - tStartLLM)} ms`);
       console.log("Reply Sent");
       console.log("Memory Update             : Background");
       console.log("=======================\n");

@@ -1,5 +1,5 @@
 import db from "../config/firebase.js";
-import { askAI } from "../ai/ollama.js";
+import { askAI } from "../ai/gemini.js";
 
 /**
  * Loads the customer profile from Firestore.

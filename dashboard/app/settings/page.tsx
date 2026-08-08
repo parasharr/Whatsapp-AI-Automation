@@ -26,7 +26,7 @@ export default function SettingsPage() {
                 <div>
                   <h4 className="font-semibold text-xs text-foreground">WhatsApp Gateway</h4>
                   <p className="text-[11px] text-muted-foreground mt-0.5">
-                    Connects Ollama generated responses back to customer chats.
+                    Connects Gemini Flash generated responses back to customer chats.
                   </p>
                 </div>
               </div>
@@ -60,14 +60,14 @@ export default function SettingsPage() {
                   <Cpu className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="font-semibold text-xs text-foreground">Ollama Model Engine</h4>
+                  <h4 className="font-semibold text-xs text-foreground">Gemini Flash Engine</h4>
                   <p className="text-[11px] text-muted-foreground mt-0.5">
-                    Executes dynamic prompt context completions using qwen3:8b.
+                    Executes dynamic prompt context completions using gemini-flash-latest.
                   </p>
                 </div>
               </div>
               <Badge className="bg-violet-500/10 text-violet-400 border border-violet-500/20 text-[10px]">
-                qwen3:8b
+                gemini-flash-latest
               </Badge>
             </div>
 

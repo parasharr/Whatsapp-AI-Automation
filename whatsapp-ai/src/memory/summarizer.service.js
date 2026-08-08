@@ -1,4 +1,4 @@
-import { askAI } from "../ai/ollama.js";
+import { askAI } from "../ai/gemini.js";
 
 /**
  * Generates a customer summary of long-term useful info based on chat history.

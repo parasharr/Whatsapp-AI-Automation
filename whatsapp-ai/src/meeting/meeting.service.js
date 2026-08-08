@@ -1,5 +1,5 @@
 import db from "../config/firebase.js";
-import { askAI } from "../ai/ollama.js";
+import { askAI } from "../ai/gemini.js";
 import { detectMeetingIntent } from "./meeting.detector.js";
 import { validateMeetingDraft, parseTime, getTodayKolkata } from "./meeting.validator.js";
 import { checkCalendarAvailability, createCalendarEvent } from "./calendar.service.js";

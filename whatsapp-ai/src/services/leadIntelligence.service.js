@@ -1,5 +1,5 @@
 import db from "../config/firebase.js";
-import { askAI } from "../ai/ollama.js";
+import { askAI } from "../ai/gemini.js";
 import { createGmailDraft } from "./gmail.service.js";
 
 /**
