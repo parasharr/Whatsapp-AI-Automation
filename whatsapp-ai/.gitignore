@@ -1,9 +1,5 @@
 # Dependency directories
 node_modules/
-# Environment variables
-.env
-.env.local
-.env.*.local
 # WhatsApp Automate session data / caches
 session.data.json
 instances/

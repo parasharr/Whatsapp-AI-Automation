@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   X, Mail, Phone, Globe, MapPin, Building, Briefcase, Calendar, 
   Target, Loader2, ExternalLink, RefreshCw, Archive, CheckSquare, 
-  Trash2, User, Cpu, CreditCard, Clock, Copy, Check, Star, CheckCircle, XCircle
+  Trash2, User, Cpu, CreditCard, Clock, Copy, Check, Star, CheckCircle, XCircle, MessageSquare
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,7 @@ export default function LeadDetailDrawer({ lead, isOpen, onClose }: LeadDetailDr
   const [creatingDraft, setCreatingDraft] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [copiedWhatsApp, setCopiedWhatsApp] = useState(false);
 
   if (!lead) return null;
 
@@ -73,6 +74,56 @@ export default function LeadDetailDrawer({ lead, isOpen, onClose }: LeadDetailDr
     toast("Email body copied to clipboard!", "success");
     setTimeout(() => setCopied(false), 2000);
   };
+
+  const generateWhatsAppFallback = (l: any) => {
+    const clientName = l.clientName || "there";
+    const companyName = l.companyName || "your company";
+    const category = l.leadCategory || "digital marketing & growth";
+    return `Hi ${clientName},\n\nWe came across your requirement for ${category} for ${companyName}.\n\nAt Grox Studio, we specialize in custom web/mobile development, brand positioning, and AI automation for growing businesses.\n\nWould you be open for a quick 5-minute chat or call to discuss how we can support ${companyName}?\n\nBest regards,\nGrox Studio Team`;
+  };
+
+  const rawWhatsappText = lead.whatsappMessage || generateWhatsAppFallback(lead);
+  const whatsappText = rawWhatsappText.replace(/\*/g, "");
+
+  const copyWhatsAppToClipboard = () => {
+    navigator.clipboard.writeText(whatsappText);
+    setCopiedWhatsApp(true);
+    toast("WhatsApp message copied to clipboard!", "success");
+    setTimeout(() => setCopiedWhatsApp(false), 2000);
+  };
+
+  const getFormattedPhone = (phoneStr?: string) => {
+    if (!phoneStr) return "";
+    let digits = phoneStr.replace(/[^0-9]/g, "");
+    if (digits.length === 10) {
+      digits = "91" + digits;
+    }
+    return digits;
+  };
+
+  const cleanPhone = getFormattedPhone(lead.phone);
+  const whatsappLink = cleanPhone
+    ? `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(whatsappText)}`
+    : `https://api.whatsapp.com/send?text=${encodeURIComponent(whatsappText)}`;
+
+  const getEmailPlainText = (htmlBody?: string) => {
+    if (!htmlBody) return "";
+    return htmlBody
+      .replace(/<br\s*[\/]?>/gi, "\n")
+      .replace(/<\/p>/gi, "\n\n")
+      .replace(/<li>/gi, "• ")
+      .replace(/<\/li>/gi, "\n")
+      .replace(/<[^>]*>/g, "")
+      .replace(/&nbsp;/g, " ")
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
+  };
+
+  const emailPlainText = getEmailPlainText(lead.emailBody);
+  const gmailComposeLink = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(lead.email || "")}&su=${encodeURIComponent(lead.emailSubject || "Project Discussion - Grox Studio")}&body=${encodeURIComponent(emailPlainText)}`;
 
   // Drawer Action Handlers
   const handleStatusChange = async (newStatus: string) => {
@@ -188,7 +239,14 @@ export default function LeadDetailDrawer({ lead, isOpen, onClose }: LeadDetailDr
                   <div className="flex items-center gap-2.5 text-muted-foreground">
                     <Mail className="w-4 h-4 text-zinc-500 shrink-0" />
                     {lead.email ? (
-                      <a href={`mailto:${lead.email}`} className="text-primary hover:underline truncate">{lead.email}</a>
+                      <a 
+                        href={`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(lead.email)}`} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="text-primary hover:underline truncate"
+                      >
+                        {lead.email}
+                      </a>
                     ) : (
                       <span>N/A</span>
                     )}
@@ -299,23 +357,33 @@ export default function LeadDetailDrawer({ lead, isOpen, onClose }: LeadDetailDr
               {/* Outreach Email Draft */}
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="text-[10px] uppercase font-mono tracking-wider text-muted-foreground flex items-center gap-1.5">
+                  <span className="text-[10px] uppercase font-mono tracking-wider text-muted-foreground flex items-center gap-1.5 font-bold">
                     <Mail className="w-3.5 h-3.5 text-primary" /> Generated Outreach Email
                   </span>
-                  <button 
-                    onClick={copyEmailToClipboard}
-                    className="text-xs text-primary flex items-center gap-1.5 hover:underline bg-transparent border-0 cursor-pointer"
-                  >
-                    {copied ? (
-                      <>
-                        <Check className="w-3.5 h-3.5" /> Copied
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-3.5 h-3.5" /> Copy Email
-                      </>
-                    )}
-                  </button>
+                  <div className="flex items-center gap-3">
+                    <a
+                      href={gmailComposeLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-primary flex items-center gap-1 hover:underline font-mono font-semibold"
+                    >
+                      <ExternalLink className="w-3 h-3" /> Open Draft in Gmail
+                    </a>
+                    <button 
+                      onClick={copyEmailToClipboard}
+                      className="text-xs text-primary flex items-center gap-1.5 hover:underline bg-transparent border-0 cursor-pointer"
+                    >
+                      {copied ? (
+                        <>
+                          <Check className="w-3.5 h-3.5" /> Copied
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3.5 h-3.5" /> Copy Email
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
                 <div className="rounded-xl border border-border bg-zinc-900/30 overflow-hidden text-xs">
                   <div className="px-4 py-2.5 bg-zinc-900/70 border-b border-border flex flex-col gap-0.5">
@@ -341,6 +409,56 @@ export default function LeadDetailDrawer({ lead, isOpen, onClose }: LeadDetailDr
                 </div>
               </div>
 
+              {/* Generated Outreach WhatsApp Message (only shown if phone number is provided) */}
+              {Boolean(lead.phone && lead.phone.trim() !== "" && lead.phone !== "N/A") && (
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] uppercase font-mono tracking-wider text-emerald-400 flex items-center gap-1.5 font-bold">
+                      <MessageSquare className="w-3.5 h-3.5 text-emerald-400" /> Generated WhatsApp Message
+                    </span>
+                    <div className="flex items-center gap-3">
+                      {whatsappLink && (
+                        <a
+                          href={whatsappLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-emerald-400 hover:underline flex items-center gap-1 font-mono font-semibold"
+                        >
+                          <ExternalLink className="w-3 h-3" /> Open Draft in WhatsApp
+                        </a>
+                      )}
+                      <button 
+                        onClick={copyWhatsAppToClipboard}
+                        className="text-xs text-emerald-400 flex items-center gap-1.5 hover:underline bg-transparent border-0 cursor-pointer font-medium"
+                      >
+                        {copiedWhatsApp ? (
+                          <>
+                            <Check className="w-3.5 h-3.5" /> Copied
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-3.5 h-3.5" /> Copy Message
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                  <div className="rounded-xl border border-emerald-500/20 bg-zinc-900/30 overflow-hidden text-xs">
+                    <div className="px-4 py-2 bg-emerald-950/30 border-b border-emerald-500/20 flex flex-col gap-0.5">
+                      <div className="flex text-muted-foreground text-[11px]">
+                        <span className="w-14 shrink-0 font-medium text-emerald-400">To:</span>
+                        <span className="text-foreground truncate font-mono">
+                          {lead.clientName ? `${lead.clientName} (${lead.phone})` : lead.phone}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="p-4 leading-relaxed text-zinc-200 min-h-[7rem] bg-zinc-950/60 font-sans whitespace-pre-wrap">
+                      {whatsappText}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Original WhatsApp Message */}
               <div className="space-y-2">
                 <span className="text-[10px] uppercase font-mono tracking-wider text-muted-foreground flex items-center gap-1.5">
@@ -355,35 +473,13 @@ export default function LeadDetailDrawer({ lead, isOpen, onClose }: LeadDetailDr
             {/* Footer / Call-To-Action Panel */}
             <div className="p-6 border-t border-border bg-zinc-900/30 flex flex-col gap-3 shrink-0">
               <div className="flex gap-2.5">
-                {/* Draft Action Button */}
-                {lead.draftStatus === "Created" ? (
-                  <a
-                    href="https://mail.google.com/mail/u/0/#drafts"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-1"
-                  >
-                    <Button className="w-full text-xs gap-1.5">
-                      <ExternalLink className="w-4 h-4" /> View Draft in Gmail
-                    </Button>
-                  </a>
-                ) : (
-                  <Button
-                    onClick={handleCreateDraft}
-                    disabled={creatingDraft}
-                    className="flex-1 text-xs gap-1.5"
-                  >
-                    {creatingDraft ? (
-                      <>
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" /> Creating Draft...
-                      </>
-                    ) : (
-                      <>
-                        <CheckSquare className="w-4 h-4" /> Create Gmail Draft
-                      </>
-                    )}
-                  </Button>
-                )}
+                {/* Close Button */}
+                <Button
+                  onClick={onClose}
+                  className="flex-1 text-xs gap-1.5 font-semibold cursor-pointer"
+                >
+                  <X className="w-4 h-4" /> Close
+                </Button>
 
                 {/* Regenerate Email Button */}
                 <Button

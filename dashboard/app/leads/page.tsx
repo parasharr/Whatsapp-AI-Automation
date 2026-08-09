@@ -11,16 +11,22 @@ import { Select } from "@/components/ui/select";
 import { useToast } from "@/components/ui/toast";
 import { 
   Users, Mail, Award, Clock, Search, Settings, 
-  Filter, Calendar, Loader2, ArrowUpDown, ChevronRight, RefreshCw, MailCheck
+  Filter, Calendar, Loader2, ArrowUpDown, ChevronRight, RefreshCw, MailCheck, Crosshair
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import LeadDetailDrawer from "@/components/leads/LeadDetailDrawer";
 import SettingsPanel from "@/components/leads/SettingsPanel";
+import LeadStatsOverview from "@/components/leads/LeadStatsOverview";
+import Calender from "./components/Calender";
+import LeadHunter from "./components/LeadHunter";
 
 export default function LeadIntelligencePage() {
   const { toast } = useToast();
   const [leads, setLeads] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Active Tab Navigation State ("leads" | "calendar" | "hunter")
+  const [activeTab, setActiveTab] = useState<"leads" | "calendar" | "hunter">("leads");
 
   // Filter States
   const [searchQuery, setSearchQuery] = useState("");
@@ -213,249 +219,318 @@ export default function LeadIntelligencePage() {
         </Button>
       </div>
 
-      {/* Top Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-        <Card className="glass-card">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <div className="space-y-1">
-              <CardDescription className="text-[10px] uppercase font-mono tracking-wider">Total Leads</CardDescription>
-              <CardTitle className="text-2xl font-bold font-mono">{totalQualified}</CardTitle>
-            </div>
-            <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center border border-blue-500/20 text-blue-400">
-              <Users className="w-5 h-5" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <p className="text-[10px] text-muted-foreground">Opportunities qualified by AI agent</p>
-          </CardContent>
-        </Card>
+      {/* Top Navigation Tabs: Leads | Calendar | Lead Hunter */}
+      <div className="flex items-center gap-1.5 p-1 rounded-xl bg-zinc-950/80 border border-zinc-800/80 text-xs font-mono w-fit">
+        <button
+          onClick={() => setActiveTab("leads")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+            activeTab === "leads"
+              ? "bg-zinc-800 text-zinc-100 shadow-sm border border-zinc-700/60 font-semibold"
+              : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/50"
+          }`}
+        >
+          <Users className="w-4 h-4 text-blue-400" />
+          <span>Leads</span>
+        </button>
 
-        <Card className="glass-card">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <div className="space-y-1">
-              <CardDescription className="text-[10px] uppercase font-mono tracking-wider">Drafts Created</CardDescription>
-              <CardTitle className="text-2xl font-bold font-mono text-emerald-400">{draftsCreated}</CardTitle>
-            </div>
-            <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 text-emerald-400">
-              <MailCheck className="w-5 h-5" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <p className="text-[10px] text-muted-foreground">Drafts auto-injected into Gmail API</p>
-          </CardContent>
-        </Card>
+        <button
+          onClick={() => setActiveTab("calendar")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+            activeTab === "calendar"
+              ? "bg-zinc-800 text-zinc-100 shadow-sm border border-zinc-700/60 font-semibold"
+              : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/50"
+          }`}
+        >
+          <Calendar className="w-4 h-4 text-emerald-400" />
+          <span>Calendar</span>
+        </button>
 
-        <Card className="glass-card">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <div className="space-y-1">
-              <CardDescription className="text-[10px] uppercase font-mono tracking-wider">Pending Drafts</CardDescription>
-              <CardTitle className="text-2xl font-bold font-mono text-amber-400">{pendingDrafts}</CardTitle>
-            </div>
-            <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center border border-amber-500/20 text-amber-400">
-              <Mail className="w-5 h-5" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <p className="text-[10px] text-muted-foreground">Needs review or manual trigger</p>
-          </CardContent>
-        </Card>
-
-        <Card className="glass-card">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <div className="space-y-1">
-              <CardDescription className="text-[10px] uppercase font-mono tracking-wider">Average Lead Score</CardDescription>
-              <CardTitle className={`text-2xl font-bold font-mono ${avgLeadScore >= 90 ? "text-emerald-400" : "text-blue-400"}`}>{avgLeadScore}</CardTitle>
-            </div>
-            <div className="w-10 h-10 rounded-lg bg-violet-500/10 flex items-center justify-center border border-violet-500/20 text-violet-400">
-              <Award className="w-5 h-5" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <p className="text-[10px] text-muted-foreground">Relative strength matching agency criteria</p>
-          </CardContent>
-        </Card>
+        <button
+          onClick={() => setActiveTab("hunter")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+            activeTab === "hunter"
+              ? "bg-zinc-800 text-zinc-100 shadow-sm border border-zinc-700/60 font-semibold"
+              : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/50"
+          }`}
+        >
+          <Crosshair className="w-4 h-4 text-purple-400" />
+          <span>Lead Hunter</span>
+        </button>
       </div>
 
-      {/* Interactive Filters Grid */}
-      <div className="p-4 rounded-xl glass-panel border border-border/50 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
-        {/* Search */}
-        <div className="relative col-span-1 sm:col-span-2">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search leads, technology..."
-            className="pl-9 bg-zinc-900/30 text-xs"
-          />
-        </div>
+      {/* TAB 1: LEADS VIEW */}
+      {activeTab === "leads" && (
+        <>
+          {/* Top Stats Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <Card className="glass-card">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <div className="space-y-1">
+                  <CardDescription className="text-[10px] uppercase font-mono tracking-wider">Total Leads</CardDescription>
+                  <CardTitle className="text-2xl font-bold font-mono">{totalQualified}</CardTitle>
+                </div>
+                <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center border border-blue-500/20 text-blue-400">
+                  <Users className="w-5 h-5" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-[10px] text-muted-foreground">Opportunities qualified by AI agent</p>
+              </CardContent>
+            </Card>
 
-        {/* Score Filter */}
-        <div className="space-y-1">
-          <Select
-            value={filterScore}
-            onChange={(e) => setFilterScore(e.target.value)}
-            className="w-full bg-zinc-900/30 text-xs py-2 px-3 border border-border rounded-lg text-foreground focus:outline-hidden"
-          >
-            <option value="all">All Lead Scores</option>
-            <option value="90+">High Match (90+)</option>
-            <option value="70-89">Medium Match (70-89)</option>
-            <option value="<70">Low Match (&lt;70)</option>
-          </Select>
-        </div>
+            <Card className="glass-card">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <div className="space-y-1">
+                  <CardDescription className="text-[10px] uppercase font-mono tracking-wider">Drafts Created</CardDescription>
+                  <CardTitle className="text-2xl font-bold font-mono text-emerald-400">{draftsCreated}</CardTitle>
+                </div>
+                <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 text-emerald-400">
+                  <MailCheck className="w-5 h-5" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-[10px] text-muted-foreground">Drafts auto-injected into Gmail API</p>
+              </CardContent>
+            </Card>
 
-        {/* Priority Filter */}
-        <div className="space-y-1">
-          <Select
-            value={filterPriority}
-            onChange={(e) => setFilterPriority(e.target.value)}
-            className="w-full bg-zinc-900/30 text-xs py-2 px-3 border border-border rounded-lg text-foreground focus:outline-hidden"
-          >
-            <option value="all">All Priorities</option>
-            <option value="high">High Priority</option>
-            <option value="medium">Medium Priority</option>
-            <option value="low">Low Priority</option>
-          </Select>
-        </div>
+            <Card className="glass-card">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <div className="space-y-1">
+                  <CardDescription className="text-[10px] uppercase font-mono tracking-wider">Pending Drafts</CardDescription>
+                  <CardTitle className="text-2xl font-bold font-mono text-amber-400">{pendingDrafts}</CardTitle>
+                </div>
+                <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center border border-amber-500/20 text-amber-400">
+                  <Mail className="w-5 h-5" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-[10px] text-muted-foreground">Needs review or manual trigger</p>
+              </CardContent>
+            </Card>
 
-        {/* Category Filter */}
-        <div className="space-y-1">
-          <Select
-            value={filterCategory}
-            onChange={(e) => setFilterCategory(e.target.value)}
-            className="w-full bg-zinc-900/30 text-xs py-2 px-3 border border-border rounded-lg text-foreground focus:outline-hidden capitalize"
-          >
-            <option value="all">All Categories</option>
-            {categoriesList.map((category) => (
-              <option key={category} value={category.toLowerCase()} className="capitalize text-foreground bg-zinc-950">
-                {category}
-              </option>
-            ))}
-          </Select>
-        </div>
-
-        {/* Draft Status Filter */}
-        <div className="space-y-1">
-          <Select
-            value={filterDraftStatus}
-            onChange={(e) => setFilterDraftStatus(e.target.value)}
-            className="w-full bg-zinc-900/30 text-xs py-2 px-3 border border-border rounded-lg text-foreground focus:outline-hidden"
-          >
-            <option value="all">All Draft Statuses</option>
-            <option value="created">Draft Created</option>
-            <option value="pending">Draft Pending</option>
-          </Select>
-        </div>
-
-        {/* Lead Status Filter */}
-        <div className="space-y-1">
-          <Select
-            value={filterLeadStatus}
-            onChange={(e) => setFilterLeadStatus(e.target.value)}
-            className="w-full bg-zinc-900/30 text-xs py-2 px-3 border border-border rounded-lg text-foreground focus:outline-hidden"
-          >
-            <option value="all">All Lead Statuses</option>
-            <option value="new">New</option>
-            <option value="contacted">Contacted</option>
-            <option value="won">Won</option>
-            <option value="lost">Lost</option>
-            <option value="archived">Archived</option>
-          </Select>
-        </div>
-      </div>
-
-      {/* Main Lead Table */}
-      <div className="rounded-xl border border-border/80 bg-zinc-900/10 overflow-hidden shadow-md">
-        {loading ? (
-          /* Loading View */
-          <div className="py-24 flex flex-col items-center justify-center gap-3 text-muted-foreground">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
-            <span className="text-xs">Connecting to lead stream...</span>
+            <Card className="glass-card">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <div className="space-y-1">
+                  <CardDescription className="text-[10px] uppercase font-mono tracking-wider">Average Lead Score</CardDescription>
+                  <CardTitle className={`text-2xl font-bold font-mono ${avgLeadScore >= 90 ? "text-emerald-400" : "text-blue-400"}`}>{avgLeadScore}</CardTitle>
+                </div>
+                <div className="w-10 h-10 rounded-lg bg-violet-500/10 flex items-center justify-center border border-violet-500/20 text-violet-400">
+                  <Award className="w-5 h-5" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-[10px] text-muted-foreground">Relative strength matching agency criteria</p>
+              </CardContent>
+            </Card>
           </div>
-        ) : filteredLeads.length === 0 ? (
-          /* Empty View */
-          <div className="py-24 flex flex-col items-center justify-center text-center p-8 gap-3 text-muted-foreground">
-            <Filter className="w-8 h-8 opacity-35" />
-            <span className="text-sm font-semibold">No qualified leads matching criteria</span>
-            <p className="text-xs max-w-xs leading-normal">
-              Try adjusting your query fields, filters, or wait for new opportunities to appear on the WhatsApp channel.
-            </p>
-          </div>
-        ) : (
-          /* Responsive Table */
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
-              <thead>
-                <tr className="bg-zinc-900/60 border-b border-border/60 text-muted-foreground font-mono text-[10px] uppercase">
-                  <th className="py-3 px-4 font-semibold">Company / Client</th>
-                  <th className="py-3 px-4 font-semibold">Category</th>
-                  <th className="py-3 px-4 font-semibold text-center">Score</th>
-                  <th className="py-3 px-4 font-semibold text-center">Priority</th>
-                  <th className="py-3 px-4 font-semibold">Email</th>
-                  <th className="py-3 px-4 font-semibold text-center">Draft Status</th>
-                  <th className="py-3 px-4 font-semibold text-center">Lead Status</th>
-                  <th className="py-3 px-4 font-semibold text-right">Created Date</th>
-                  <th className="py-3 px-4 w-10"></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/40">
-                {filteredLeads.map((lead) => (
-                  <tr
-                    key={lead.id}
-                    onClick={() => {
-                      setSelectedLead(lead);
-                      setIsDrawerOpen(true);
-                    }}
-                    className="hover:bg-zinc-900/40 transition-colors group cursor-pointer"
-                  >
-                    <td className="py-3.5 px-4 font-medium text-foreground">
-                      <div className="flex flex-col gap-0.5">
-                        <span className="text-foreground group-hover:text-primary transition-colors font-semibold">
-                          {lead.companyName || "Unknown Company"}
-                        </span>
-                        <span className="text-[10px] text-muted-foreground font-normal">
-                          {lead.clientName || "Unknown client"}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="py-3.5 px-4 capitalize text-muted-foreground font-medium">
-                      {lead.leadCategory}
-                    </td>
-                    <td className="py-3.5 px-4 text-center">
-                      <span className={`px-2 py-0.5 font-mono text-[11px] font-bold rounded-md ${scoreColor(lead.leadScore)}`}>
-                        {lead.leadScore}
-                      </span>
-                    </td>
-                    <td className="py-3.5 px-4 text-center">
-                      <Badge className={`capitalize font-semibold text-[9px] ${priorityBadge(lead.priority)}`}>
-                        {lead.priority}
-                      </Badge>
-                    </td>
-                    <td className="py-3.5 px-4 text-muted-foreground truncate max-w-[140px] font-medium">
-                      {lead.email || <span className="text-zinc-600 font-normal">N/A</span>}
-                    </td>
-                    <td className="py-3.5 px-4 text-center">
-                      <Badge className={`capitalize text-[9px] ${draftBadge(lead.draftStatus)}`}>
-                        {lead.draftStatus}
-                      </Badge>
-                    </td>
-                    <td className="py-3.5 px-4 text-center">
-                      <span className={`inline-flex px-2 py-0.5 rounded-full text-[9px] font-bold ${statusBadge(lead.status)}`}>
-                        {lead.status || "New"}
-                      </span>
-                    </td>
-                    <td className="py-3.5 px-4 text-right text-muted-foreground font-mono text-[10px]">
-                      {lead.createdAt ? new Date(lead.createdAt).toLocaleDateString() : "N/A"}
-                    </td>
-                    <td className="py-3.5 px-4 text-right text-muted-foreground">
-                      <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 group-hover:text-primary transform translate-x-[-4px] group-hover:translate-x-0 transition-all duration-200" />
-                    </td>
-                  </tr>
+
+          {/* Analytics & Stats Overview Grid */}
+          <LeadStatsOverview leads={leads} />
+
+          {/* Interactive Filters Grid */}
+          <div className="p-4 rounded-xl glass-panel border border-border/50 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+            {/* Search */}
+            <div className="relative col-span-1 sm:col-span-2">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search leads, technology..."
+                className="pl-9 bg-zinc-900/30 text-xs"
+              />
+            </div>
+
+            {/* Score Filter */}
+            <div className="space-y-1">
+              <Select
+                value={filterScore}
+                onChange={(e) => setFilterScore(e.target.value)}
+                className="w-full bg-zinc-900/30 text-xs py-2 px-3 border border-border rounded-lg text-foreground focus:outline-hidden"
+              >
+                <option value="all">All Lead Scores</option>
+                <option value="90+">High Match (90+)</option>
+                <option value="70-89">Medium Match (70-89)</option>
+                <option value="<70">Low Match (&lt;70)</option>
+              </Select>
+            </div>
+
+            {/* Priority Filter */}
+            <div className="space-y-1">
+              <Select
+                value={filterPriority}
+                onChange={(e) => setFilterPriority(e.target.value)}
+                className="w-full bg-zinc-900/30 text-xs py-2 px-3 border border-border rounded-lg text-foreground focus:outline-hidden"
+              >
+                <option value="all">All Priorities</option>
+                <option value="high">High Priority</option>
+                <option value="medium">Medium Priority</option>
+                <option value="low">Low Priority</option>
+              </Select>
+            </div>
+
+            {/* Category Filter */}
+            <div className="space-y-1">
+              <Select
+                value={filterCategory}
+                onChange={(e) => setFilterCategory(e.target.value)}
+                className="w-full bg-zinc-900/30 text-xs py-2 px-3 border border-border rounded-lg text-foreground focus:outline-hidden capitalize"
+              >
+                <option value="all">All Categories</option>
+                {categoriesList.map((category) => (
+                  <option key={category} value={category.toLowerCase()} className="capitalize text-foreground bg-zinc-950">
+                    {category}
+                  </option>
                 ))}
-              </tbody>
-            </table>
+              </Select>
+            </div>
+
+            {/* Draft Status Filter */}
+            <div className="space-y-1">
+              <Select
+                value={filterDraftStatus}
+                onChange={(e) => setFilterDraftStatus(e.target.value)}
+                className="w-full bg-zinc-900/30 text-xs py-2 px-3 border border-border rounded-lg text-foreground focus:outline-hidden"
+              >
+                <option value="all">All Draft Statuses</option>
+                <option value="created">Draft Created</option>
+                <option value="pending">Draft Pending</option>
+              </Select>
+            </div>
+
+            {/* Lead Status Filter */}
+            <div className="space-y-1">
+              <Select
+                value={filterLeadStatus}
+                onChange={(e) => setFilterLeadStatus(e.target.value)}
+                className="w-full bg-zinc-900/30 text-xs py-2 px-3 border border-border rounded-lg text-foreground focus:outline-hidden"
+              >
+                <option value="all">All Lead Statuses</option>
+                <option value="new">New</option>
+                <option value="contacted">Contacted</option>
+                <option value="won">Won</option>
+                <option value="lost">Lost</option>
+                <option value="archived">Archived</option>
+              </Select>
+            </div>
           </div>
-        )}
-      </div>
+
+          {/* Main Lead Table */}
+          <div className="rounded-xl border border-border/80 bg-zinc-900/10 overflow-hidden shadow-md">
+            {loading ? (
+              /* Loading View */
+              <div className="py-24 flex flex-col items-center justify-center gap-3 text-muted-foreground">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                <span className="text-xs">Connecting to lead stream...</span>
+              </div>
+            ) : filteredLeads.length === 0 ? (
+              /* Empty View */
+              <div className="py-24 flex flex-col items-center justify-center text-center p-8 gap-3 text-muted-foreground">
+                <Filter className="w-8 h-8 opacity-35" />
+                <span className="text-sm font-semibold">No qualified leads matching criteria</span>
+                <p className="text-xs max-w-xs leading-normal">
+                  Try adjusting your query fields, filters, or wait for new opportunities to appear on the WhatsApp channel.
+                </p>
+              </div>
+            ) : (
+              /* Responsive Table */
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="bg-zinc-900/60 border-b border-border/60 text-muted-foreground font-mono text-[10px] uppercase">
+                      <th className="py-3 px-4 font-semibold">Company / Client</th>
+                      <th className="py-3 px-4 font-semibold">Category</th>
+                      <th className="py-3 px-4 font-semibold text-center">Score</th>
+                      <th className="py-3 px-4 font-semibold text-center">Priority</th>
+                      <th className="py-3 px-4 font-semibold">Email</th>
+                      <th className="py-3 px-4 font-semibold text-center">Draft Status</th>
+                      <th className="py-3 px-4 font-semibold text-center">Lead Status</th>
+                      <th className="py-3 px-4 font-semibold text-right">Created Date</th>
+                      <th className="py-3 px-4 w-10"></th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/40">
+                    {filteredLeads.map((lead) => (
+                      <tr
+                        key={lead.id}
+                        onClick={() => {
+                          setSelectedLead(lead);
+                          setIsDrawerOpen(true);
+                        }}
+                        className="hover:bg-zinc-900/40 transition-colors group cursor-pointer"
+                      >
+                        <td className="py-3.5 px-4 font-medium text-foreground">
+                          <div className="flex flex-col gap-0.5">
+                            <span className="text-foreground group-hover:text-primary transition-colors font-semibold">
+                              {lead.companyName || "Unknown Company"}
+                            </span>
+                            <span className="text-[10px] text-muted-foreground font-normal">
+                              {lead.clientName || "Unknown client"}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="py-3.5 px-4 capitalize text-muted-foreground font-medium">
+                          {lead.leadCategory}
+                        </td>
+                        <td className="py-3.5 px-4 text-center">
+                          <span className={`px-2 py-0.5 font-mono text-[11px] font-bold rounded-md ${scoreColor(lead.leadScore)}`}>
+                            {lead.leadScore}
+                          </span>
+                        </td>
+                        <td className="py-3.5 px-4 text-center">
+                          <Badge className={`capitalize font-semibold text-[9px] ${priorityBadge(lead.priority)}`}>
+                            {lead.priority}
+                          </Badge>
+                        </td>
+                        <td className="py-3.5 px-4 text-muted-foreground truncate max-w-[140px] font-medium">
+                          {lead.email || <span className="text-zinc-600 font-normal">N/A</span>}
+                        </td>
+                        <td className="py-3.5 px-4 text-center">
+                          <Badge className={`capitalize text-[9px] ${draftBadge(lead.draftStatus)}`}>
+                            {lead.draftStatus}
+                          </Badge>
+                        </td>
+                        <td className="py-3.5 px-4 text-center">
+                          <span className={`inline-flex px-2 py-0.5 rounded-full text-[9px] font-bold ${statusBadge(lead.status)}`}>
+                            {lead.status || "New"}
+                          </span>
+                        </td>
+                        <td className="py-3.5 px-4 text-right text-muted-foreground font-mono text-[10px]">
+                          {lead.createdAt ? new Date(lead.createdAt).toLocaleDateString() : "N/A"}
+                        </td>
+                        <td className="py-3.5 px-4 text-right text-muted-foreground">
+                          <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 group-hover:text-primary transform translate-x-[-4px] group-hover:translate-x-0 transition-all duration-200" />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+
+      {/* TAB 2: CALENDAR VIEW */}
+      {activeTab === "calendar" && (
+        <Calender
+          leads={leads}
+          onSelectLead={(lead) => {
+            setSelectedLead(lead);
+            setIsDrawerOpen(true);
+          }}
+        />
+      )}
+
+      {/* TAB 3: LEAD HUNTER VIEW */}
+      {activeTab === "hunter" && (
+        <LeadHunter
+          leads={leads}
+          onSelectLead={(lead) => {
+            setSelectedLead(lead);
+            setIsDrawerOpen(true);
+          }}
+        />
+      )}
 
       {/* Slide-over Detail Drawer Component */}
       <LeadDetailDrawer

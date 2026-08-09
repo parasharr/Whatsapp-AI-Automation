@@ -3,7 +3,7 @@ import { askAI } from "../ai/gemini.js";
 import { createGmailDraft } from "./gmail.service.js";
 
 /**
- * Parses and extracts structured JSON from Ollama's response.
+ * Parses and extracts structured JSON from Ollama/Gemini response.
  */
 function parseAIResponse(responseText) {
   try {
@@ -23,7 +23,17 @@ function parseAIResponse(responseText) {
 }
 
 /**
- * System prompt to guide the AI model in qualifying, extracting, scoring, and drafting emails.
+ * Helper to generate a fallback WhatsApp outreach message if AI output is empty.
+ */
+function generateWhatsAppFallback(clientName, companyName, category) {
+  const cName = clientName || "there";
+  const comp = companyName || "your business";
+  const cat = category || "digital marketing & growth";
+  return `Hi ${cName},\n\nWe came across your requirement for ${cat} for ${comp}.\n\nAt Grox Studio, we specialize in custom web/mobile development, brand positioning, and AI automation for growing businesses.\n\nWould you be open for a quick 5-minute chat or call to discuss how we can support ${comp}?\n\nBest regards,\nGrox Studio Team`;
+}
+
+/**
+ * System prompt to guide the AI model in qualifying, extracting, scoring, and drafting outreach content.
  */
 const SYSTEM_PROMPT = `You are an advanced Lead Intelligence AI assistant for Grox Studio (a premium software design and development agency).
 Your task is to analyze an incoming WhatsApp message and determine if it represents a genuine business opportunity for Grox Studio.
@@ -47,7 +57,7 @@ QUALIFICATION RULES:
 SENDER CONTEXT:
 You will be provided with the message sender's name and ID/phone. If the sender is an internal team member (e.g., "Pranjeet") and their message is conversational/directed at other team members rather than forwarding an external lead request, mark it as NOT a business opportunity (isBusinessOpportunity: false).
 
-If a message is qualified, extract the details, calculate a Lead Score (0 to 100), generate a summary, and compose a personalized outreach email.
+If a message is qualified, extract the details, calculate a Lead Score (0 to 100), generate a summary, and compose BOTH a personalized outreach email AND a personalized WhatsApp outreach message.
 
 LEAD SCORING (0 to 100):
 Generate a score considering:
@@ -61,8 +71,10 @@ Generate a score considering:
 8. Tech stack alignment
 9. Contact information availability (email, phone, etc.)
 
-OUTREACH EMAIL:
-Generate a professional, personalized outreach email from the Grox Studio Outreach Team. The email body must be HTML-formatted (use <p>, <br>, <ul>, <li>, etc., but NO outer HTML page wrappers). Do not use generic placeholders like [Your Name] in the signature; sign off as "Grox Studio Team".
+OUTREACH EMAIL & WHATSAPP MESSAGE:
+Generate both:
+1. A professional, personalized outreach email from the Grox Studio Outreach Team. The email body must be HTML-formatted (use <p>, <br>, <ul>, <li>, etc., but NO outer HTML page wrappers). Do not use generic placeholders like [Your Name] in the signature; sign off as "Grox Studio Team".
+2. A concise, engaging, and professional WhatsApp outreach message. Do NOT use asterisks (*) or markdown formatting symbols in the message. Use clear linebreaks and appropriate emojis. Sign off as "Grox Studio Team".
 
 You MUST reply with a single, valid JSON object matching this schema exactly. Do not include any explanations or markdown wrappers outside the JSON structure.
 
@@ -89,7 +101,8 @@ JSON Schema:
   "leadScore": number (0 to 100),
   "aiSummary": string (concise summary of the lead, requirements, and highlights),
   "emailSubject": string (personalized subject line),
-  "emailBody": string (HTML-formatted email draft body)
+  "emailBody": string (HTML-formatted email draft body),
+  "whatsappMessage": string (formatted WhatsApp text draft with *bold* text, emojis, and linebreaks)
 }
 `;
 
@@ -146,6 +159,7 @@ export async function handleLeadMessage(msg, groupName) {
     const aiSummary = parsed.aiSummary || "";
     const emailSubject = parsed.emailSubject || "Project Discussion - Grox Studio";
     const emailBody = parsed.emailBody || "";
+    const whatsappMessage = parsed.whatsappMessage || generateWhatsAppFallback(info.clientName, info.companyName, info.leadCategory);
     const confidenceScore = info.confidenceScore || 70;
 
     // Fetch threshold settings
@@ -191,6 +205,7 @@ export async function handleLeadMessage(msg, groupName) {
       aiSummary: aiSummary,
       emailSubject: emailSubject,
       emailBody: emailBody,
+      whatsappMessage: whatsappMessage,
       status: "New",
       draftStatus: draftStatus,
       draftId: draftId,
@@ -211,7 +226,7 @@ export async function handleLeadMessage(msg, groupName) {
 }
 
 /**
- * Regenerate email for a lead and save it to Firestore.
+ * Regenerate email and WhatsApp outreach message for a lead and save it to Firestore.
  */
 export async function regenerateLeadEmail(leadId) {
   try {
@@ -232,13 +247,14 @@ We have this qualified business lead:
 - Project Summary: ${data.projectSummary}
 - Original Message: ${data.originalMessage}
 
-Write a highly personalized, professional outreach email proposing a call with Grox Studio.
+Write BOTH a highly personalized, professional outreach email AND a concise, direct WhatsApp outreach message proposing a call with Grox Studio.
 Format your output ONLY as a JSON object matching this schema. No explanation or codeblocks.
 
 Schema:
 {
   "emailSubject": "String subject line",
-  "emailBody": "HTML formatted body content (use <p>, <br>, etc., but no outer html page wrappers)"
+  "emailBody": "HTML formatted body content (use <p>, <br>, etc., but no outer html page wrappers)",
+  "whatsappMessage": "Formatted WhatsApp outreach text (no asterisks or markdown symbols), clear linebreaks, and emojis"
 }`;
 
     const aiResponse = await askAI([
@@ -250,14 +266,15 @@ Schema:
     const updates = {
       emailSubject: parsed.emailSubject || "Project Discussion - Grox Studio",
       emailBody: parsed.emailBody || "",
+      whatsappMessage: parsed.whatsappMessage || generateWhatsAppFallback(data.clientName, data.companyName, data.leadCategory),
       updatedAt: new Date()
     };
 
     await docRef.update(updates);
-    console.log(`[Lead Intelligence] Regenerated email for lead: ${leadId}`);
+    console.log(`[Lead Intelligence] Regenerated email & WhatsApp outreach for lead: ${leadId}`);
     return updates;
   } catch (error) {
-    console.error("[Lead Intelligence] Error regenerating email:", error.message);
+    console.error("[Lead Intelligence] Error regenerating email/WhatsApp content:", error.message);
     throw error;
   }
 }
